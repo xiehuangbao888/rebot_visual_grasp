@@ -1,0 +1,45 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz_default_plugins/Grid
+      Enabled: true
+      Name: Grid
+    - Class: rviz_default_plugins/TF
+      Enabled: true
+      Name: TF
+    - Alpha: 1
+      Class: rviz_default_plugins/RobotModel
+      Description Topic:
+        Value: /robot_description
+      Enabled: true
+      Name: RobotModel
+    - Class: rviz_default_plugins/PointCloud2
+      Enabled: true
+      Name: PointCloud
+      Topic:
+        Value: /camera/depth/points
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: GraspMarkers
+      Topic:
+        Value: /grasp_markers
+  Global Options:
+    Fixed Frame: base_link
+  Tools:
+    - Class: rviz_default_plugins/Interact
+    - Class: rviz_default_plugins/MoveCamera
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Distance: 1.2
+      Focal Point:
+        X: 0.25
+        Y: 0
+        Z: 0.15
+      Name: Current View
+      Pitch: 0.5
+      Yaw: 0.8
+Window Name: rviz

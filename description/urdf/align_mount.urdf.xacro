@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="rebotarm_rs_align_mount">
+  <xacro:include filename="$(find rebotarm_bringup)/description/urdf/00-arm-rs_asm-v3.urdf"/>
+
+  <link name="mount_x_link"/>
+  <link name="mount_y_link"/>
+  <link name="mount_z_link"/>
+  <link name="mount_roll_link"/>
+  <link name="mount_pitch_link"/>
+  <link name="camera_mount_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://rebot_visual_grasp/description/meshes/D435_Gemini2_Mount.stl"
+              scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="mount_red">
+        <color rgba="0.85 0.15 0.15 1"/>
+      </material>
+    </visual>
+  </link>
+
+  <joint name="mount_tx" type="prismatic">
+    <parent link="gripper_end"/>
+    <child link="mount_x_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="-0.2" upper="0.2" effort="1" velocity="1"/>
+  </joint>
+  <joint name="mount_ty" type="prismatic">
+    <parent link="mount_x_link"/>
+    <child link="mount_y_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-0.2" upper="0.2" effort="1" velocity="1"/>
+  </joint>
+  <joint name="mount_tz" type="prismatic">
+    <parent link="mount_y_link"/>
+    <child link="mount_z_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-0.2" upper="0.2" effort="1" velocity="1"/>
+  </joint>
+  <joint name="mount_rr" type="revolute">
+    <parent link="mount_z_link"/>
+    <child link="mount_roll_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="-3.1416" upper="3.1416" effort="1" velocity="1"/>
+  </joint>
+  <joint name="mount_rp" type="revolute">
+    <parent link="mount_roll_link"/>
+    <child link="mount_pitch_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-3.1416" upper="3.1416" effort="1" velocity="1"/>
+  </joint>
+  <joint name="mount_ry" type="revolute">
+    <parent link="mount_pitch_link"/>
+    <child link="camera_mount_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-3.1416" upper="3.1416" effort="1" velocity="1"/>
+  </joint>
+</robot>

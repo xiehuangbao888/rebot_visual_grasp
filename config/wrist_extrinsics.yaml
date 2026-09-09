@@ -1,0 +1,16 @@
+# Wrist camera extrinsic relative to gripper_end (meters / radians).
+# Tune with align_mount / align_camera, then copy values here.
+# Frame chain: gripper_end -> camera_mount_link -> camera_link
+# Orbbec driver publishes camera_link -> optical frames.
+
+mount:
+  parent_frame: gripper_end
+  child_frame: camera_mount_link
+  xyz: [-0.0857, 0.0000, 0.0002]
+  rpy: [1.5609, -0.0043, 1.5333]
+
+camera:
+  parent_frame: camera_mount_link
+  child_frame: camera_link
+  xyz: [0.0250, 0.0542, 0.0112]
+  rpy: [-0.0157, -1.3078, -1.5644]

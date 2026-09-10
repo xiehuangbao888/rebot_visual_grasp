@@ -3,7 +3,7 @@
   <xacro:arg name="with_camera" default="true"/>
   <xacro:include filename="$(find rebotarm_bringup)/description/urdf/00-arm-rs_asm-v3.urdf"/>
   <xacro:if value="$(arg with_camera)">
-    <xacro:include filename="$(find orbbec_description)/urdf/gemini2.urdf.xacro"/>
+    <xacro:include filename="$(find orbbec_description)/urdf/gemini_2.urdf.xacro"/>
   </xacro:if>
 
   # Mount origin coincides with gripper_end / gripper_end.STL.

@@ -16,6 +16,9 @@ def generate_launch_description():
         ]
     )
     robot_description = ParameterValue(Command(["xacro ", xacro_file]), value_type=str)
+    rviz_config = PathJoinSubstitution(
+        [vis_share, "rviz", "display_arm_camera.rviz"]
+    )
 
     return LaunchDescription(
         [
@@ -37,6 +40,7 @@ def generate_launch_description():
                 executable="rviz2",
                 name="rviz2",
                 output="screen",
+                arguments=["-d", rviz_config],
             ),
         ]
     )

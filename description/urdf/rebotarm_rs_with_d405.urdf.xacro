@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="rebotarm_rs_d405">
+  <xacro:arg name="with_camera" default="true"/>
+  <xacro:arg name="use_nominal_extrinsics" default="true"/>
+  <xacro:include filename="$(find rebotarm_bringup)/description/urdf/00-arm-rs_asm-v3.urdf"/>
+  <xacro:if value="$(arg with_camera)">
+    <xacro:include filename="$(find realsense2_description)/urdf/_d405.urdf.xacro"/>
+  </xacro:if>
+
+  <!--
+    Mount mesh: description/meshes/D405_305_Mount.stl (from D405_305_Mount.step, mm → scale 0.001).
+    Frame chain: gripper_end -> camera_mount_link -> camera_bottom_screw_frame -> camera_link
+
+    Two-hole alignment (camera laid parallel into red pocket, not standing vertical):
+      - Mount face holes ~20 mm apart (STEP).
+      - D405 bottom: 1/4-20 at bottom_screw origin, two M3 at x=±10 mm (along hole line).
+      - camera_xyz = hole midpoint; +X along hole pair, +Z along hole axis (into camera).
+      - mount_* = Gemini2 flange seed (same gripper interface).
+  -->
+  <xacro:property name="mount_xyz" value="-0.0857 0.0000 0.0002"/>
+  <xacro:property name="mount_rpy" value="1.5609 -0.0043 1.5333"/>
+  <xacro:property name="mount_mesh_scale" value="0.001 0.001 0.001"/>
+  <!-- Keep user-tuned orientation; snap position to mount hole midpoint (seated in red pocket). -->
+  <xacro:property name="camera_xyz" value="-0.0003 0.0463 -0.0081"/>
+  <xacro:property name="camera_rpy" value="-0.0444 -1.3136 -1.5225"/>
+
+  <link name="camera_mount_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://rebot_visual_grasp/description/meshes/D405_305_Mount.stl"
+              scale="${mount_mesh_scale}"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <joint name="gripper_to_mount" type="fixed">
+    <parent link="gripper_end"/>
+    <child link="camera_mount_link"/>
+    <origin xyz="${mount_xyz}" rpy="${mount_rpy}"/>
+  </joint>
+
+  <xacro:if value="$(arg with_camera)">
+    <!-- sensor_d405 origin is the camera bottom screw frame -->
+    <xacro:sensor_d405
+        parent="camera_mount_link"
+        name="camera"
+        use_nominal_extrinsics="$(arg use_nominal_extrinsics)">
+      <origin xyz="${camera_xyz}" rpy="${camera_rpy}"/>
+    </xacro:sensor_d405>
+  </xacro:if>
+</robot>

@@ -16,7 +16,12 @@ from visualization_msgs.msg import (
     Marker,
 )
 
-from rebot_visual_grasp.paths import writable_xacro
+from rebot_visual_grasp.paths import (
+    assembly_cfg,
+    resolve_assembly,
+    writable_extrinsics,
+    writable_xacro,
+)
 
 POSE_PATH = Path("/tmp/camera_pose.txt")
 
@@ -63,9 +68,9 @@ def _parse_xyz_rpy_from_xacro(text: str) -> Pose | None:
     return pose
 
 
-def load_current_camera_pose() -> Pose:
+def load_current_camera_pose(assembly: str) -> Pose:
     """Start from the already-saved camera↔mount assembly in xacro."""
-    xacro_path = writable_xacro()
+    xacro_path = writable_xacro(assembly)
     if xacro_path.is_file():
         pose = _parse_xyz_rpy_from_xacro(xacro_path.read_text())
         if pose is not None:
@@ -75,13 +80,35 @@ def load_current_camera_pose() -> Pose:
     return pose
 
 
-def write_params(xyz, rpy):
+def _write_extrinsics_camera(assembly: str, xyz: str, rpy: str) -> None:
+    path = writable_extrinsics(assembly)
+    if not path.is_file():
+        return
+    xs = [float(v) for v in xyz.split()]
+    rs = [float(v) for v in rpy.split()]
+    text = path.read_text()
+    text = re.sub(
+        r"(camera:\n(?:.*\n)*?\s+xyz:\s*)\[[^\]]*\]",
+        rf"\g<1>[{xs[0]:.4f}, {xs[1]:.4f}, {xs[2]:.4f}]",
+        text,
+        count=1,
+    )
+    text = re.sub(
+        r"(camera:\n(?:.*\n)*?\s+rpy:\s*)\[[^\]]*\]",
+        rf"\g<1>[{rs[0]:.4f}, {rs[1]:.4f}, {rs[2]:.4f}]",
+        text,
+        count=1,
+    )
+    path.write_text(text)
+
+
+def write_params(assembly: str, xyz, rpy):
     text = (
         f'<xacro:property name="camera_xyz" value="{xyz}"/>\n'
         f'<xacro:property name="camera_rpy" value="{rpy}"/>\n'
     )
     POSE_PATH.write_text(text)
-    xacro_path = writable_xacro()
+    xacro_path = writable_xacro(assembly)
     if xacro_path.exists():
         src = xacro_path.read_text()
         src = re.sub(
@@ -97,54 +124,88 @@ def write_params(xyz, rpy):
             count=1,
         )
         xacro_path.write_text(src)
+    _write_extrinsics_camera(assembly, xyz, rpy)
     return text
 
 
 class AlignCamera(Node):
     def __init__(self):
         super().__init__("align_camera")
-        self._initial_pose = load_current_camera_pose()
+        self.declare_parameter("assembly", "gemini2")
+        self.assembly = resolve_assembly(
+            self.get_parameter("assembly").get_parameter_value().string_value
+        )
+        self._cfg = assembly_cfg(self.assembly)
+        self._initial_pose = load_current_camera_pose(self.assembly)
         self.server = InteractiveMarkerServer(self, "/align_camera")
         self._insert_marker()
         self.server.applyChanges()
         xyz, rpy = format_params(self._initial_pose)
+        label = self._cfg["camera_label"]
         self.get_logger().info(
-            "Starts from current assembly (camera relative to camera_mount_link):\n"
+            f"assembly={self.assembly} xacro={writable_xacro(self.assembly)}\n"
+            f"Starts from current assembly (camera relative to camera_mount_link):\n"
             f"  camera_xyz=\"{xyz}\"\n"
             f"  camera_rpy=\"{rpy}\"\n"
-            "Click Interact, drag the gray Gemini / cyan box to fine-tune. "
+            f"Click Interact, drag the {label} / cyan box to fine-tune. "
             "Release mouse to overwrite camera_xyz / camera_rpy."
         )
 
     def _camera_mesh(self):
+        from ament_index_python.packages import PackageNotFoundError, get_package_share_directory
+        from pathlib import Path as _Path
+
         mesh = Marker()
         mesh.type = Marker.MESH_RESOURCE
-        mesh.mesh_resource = "package://orbbec_description/meshes/gemini2/base_link.STL"
         mesh.mesh_use_embedded_materials = False
-        mesh.pose.position.x = -0.01491
-        mesh.pose.position.y = -0.025
-        mesh.pose.position.z = -0.0125
-        mesh.scale.x = mesh.scale.y = mesh.scale.z = 1.0
+        # Prefer file:// so RViz still finds the mesh if package:// lookup fails.
+        resource = self._cfg["camera_mesh"]
+        pkg = self._cfg.get("camera_mesh_package")
+        rel = self._cfg.get("camera_mesh_relpath")
+        if pkg and rel:
+            try:
+                abs_mesh = _Path(get_package_share_directory(pkg)) / rel
+                if abs_mesh.is_file():
+                    resource = abs_mesh.resolve().as_uri()
+            except PackageNotFoundError:
+                pass
+        mesh.mesh_resource = resource
+        ox, oy, oz = self._cfg["camera_mesh_offset"]
+        mesh.pose.position.x = ox
+        mesh.pose.position.y = oy
+        mesh.pose.position.z = oz
+        roll, pitch, yaw = self._cfg.get("camera_mesh_rpy", (0.0, 0.0, 0.0))
+        qx, qy, qz, qw = quaternion_from_euler(roll, pitch, yaw)
+        mesh.pose.orientation.x = qx
+        mesh.pose.orientation.y = qy
+        mesh.pose.orientation.z = qz
+        mesh.pose.orientation.w = qw
+        s = float(self._cfg["camera_mesh_scale"])
+        mesh.scale.x = mesh.scale.y = mesh.scale.z = s
         mesh.color.r, mesh.color.g, mesh.color.b, mesh.color.a = 0.75, 0.75, 0.8, 1.0
+        self.get_logger().info(f"align camera mesh resource: {resource}")
         return mesh
 
     def _grab_box(self):
         box = Marker()
         box.type = Marker.CUBE
-        box.pose.position.x = -0.01491
-        box.pose.position.y = -0.025
-        box.pose.position.z = -0.0125
-        box.scale.x = 0.09
+        ox, oy, oz = self._cfg["camera_mesh_offset"]
+        box.pose.position.x = ox
+        box.pose.position.y = oy
+        box.pose.position.z = oz
+        # Large always-visible handle so the scene is never "empty" if STL fails.
+        box.scale.x = 0.05
         box.scale.y = 0.05
         box.scale.z = 0.03
-        box.color.r, box.color.g, box.color.b, box.color.a = 0.2, 0.8, 1.0, 0.4
+        box.color.r, box.color.g, box.color.b, box.color.a = 0.2, 0.8, 1.0, 0.55
         return box
 
     def _insert_marker(self):
+        label = self._cfg["camera_label"]
         int_marker = InteractiveMarker()
         int_marker.header.frame_id = "camera_mount_link"
-        int_marker.name = "gemini2"
-        int_marker.description = "DRAG Gemini 2 (from current assembly)"
+        int_marker.name = self.assembly
+        int_marker.description = f"DRAG {label} (from current assembly)"
         int_marker.scale = 0.12
         int_marker.pose = self._initial_pose
 
@@ -181,7 +242,7 @@ class AlignCamera(Node):
         if feedback.event_type != InteractiveMarkerFeedback.MOUSE_UP:
             return
         xyz, rpy = format_params(feedback.pose)
-        text = write_params(xyz, rpy)
+        text = write_params(self.assembly, xyz, rpy)
         self.get_logger().info(
             "Updated camera pose relative to camera_mount_link and wrote xacro:\n" + text
         )

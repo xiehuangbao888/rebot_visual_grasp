@@ -1,0 +1,15 @@
+# Wrist D405 extrinsic relative to gripper_end (meters / radians).
+# Keep in sync with description/urdf/rebotarm_rs_with_d405.urdf.xacro.
+# Frame chain: gripper_end -> camera_mount_link -> camera_bottom_screw_frame -> camera_link
+
+mount:
+  parent_frame: gripper_end
+  child_frame: camera_mount_link
+  xyz: [-0.0857, 0.0000, 0.0002]
+  rpy: [1.5609, -0.0043, 1.5333]
+
+camera:
+  parent_frame: camera_mount_link
+  child_frame: camera_bottom_screw_frame
+  xyz: [-0.0003, 0.0463, -0.0081]
+  rpy: [-0.0444, -1.3136, -1.5225]

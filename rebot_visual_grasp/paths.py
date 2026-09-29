@@ -31,7 +31,24 @@ ASSEMBLIES = {
         "camera_mesh_rpy": (1.57079632679, 0.0, 1.57079632679),
         "camera_label": "D405",
     },
+    "d435i": {
+        "xacro": "rebotarm_rs_with_d435i.urdf.xacro",
+        # Same physical mount as Gemini2.
+        "mount_mesh": "D435_Gemini2_Mount.stl",
+        "extrinsics": "wrist_extrinsics_d435i.yaml",
+        "camera_mesh": "package://realsense2_description/meshes/d435.dae",
+        "camera_mesh_package": "realsense2_description",
+        "camera_mesh_relpath": "meshes/d435.dae",
+        "camera_mesh_scale": 1.0,
+        "camera_mesh_offset": (0.0149, 0.0, 0.0125),
+        "camera_mesh_rpy": (1.57079632679, 0.0, 1.57079632679),
+        "camera_label": "D435i",
+    },
 }
+
+# Assemblies that share the same physical wrist mount bracket (not D405).
+SHARED_MOUNT_ASSEMBLIES = ("gemini2", "d435i")
+
 
 
 def resolve_assembly(name: str | None = None) -> str:

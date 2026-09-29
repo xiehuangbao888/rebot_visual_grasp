@@ -21,7 +21,7 @@ def generate_launch_description():
             DeclareLaunchArgument(
                 "assembly",
                 default_value="gemini2",
-                description="gemini2 (default, existing) or d405",
+                description="gemini2 / d435i share mount; d405 is independent",
             ),
             Node(
                 package="robot_state_publisher",

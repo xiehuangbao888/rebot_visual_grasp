@@ -3,7 +3,7 @@
 <package format="3">
   <name>rebot_visual_grasp</name>
   <version>0.1.0</version>
-  <description>Wrist camera (Gemini 2 / D405) model, mount alignment, and visual grasp tools for reBot Arm RS.</description>
+  <description>Wrist camera (Gemini 2 / D405 / D435i) model, mount alignment, and visual grasp tools for reBot Arm RS.</description>
   <maintainer email="support@example.com">yuan</maintainer>
   <license>Apache-2.0</license>
 

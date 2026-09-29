@@ -20,6 +20,7 @@ from visualization_msgs.msg import (
 )
 
 from rebot_visual_grasp.paths import (
+    SHARED_MOUNT_ASSEMBLIES,
     mount_mesh_uri,
     resolve_assembly,
     share_xacro,
@@ -119,21 +120,31 @@ def _patch_xacro_mount(xacro_path, xyz: str, rpy: str) -> None:
 
 
 def write_params(assembly: str, xyz, rpy):
-    """Write mount pose for this assembly only (do not overwrite other cameras)."""
+    """Write mount pose.
+
+    gemini2 and d435i share the same physical mount → sync those only.
+    d405 has its own bracket → never overwrite it from gemini2/d435i.
+    """
     text = (
         f'<xacro:property name="mount_xyz" value="{xyz}"/>\n'
         f'<xacro:property name="mount_rpy" value="{rpy}"/>\n'
     )
     POSE_PATH.write_text(text)
-    src_path = writable_xacro(assembly)
-    _patch_xacro_mount(src_path, xyz, rpy)
-    try:
-        share_path = share_xacro(assembly)
-        if share_path.resolve() != src_path.resolve():
-            _patch_xacro_mount(share_path, xyz, rpy)
-    except Exception:
-        pass
-    _write_extrinsics_mount(assembly, xyz, rpy)
+    targets = (
+        list(SHARED_MOUNT_ASSEMBLIES)
+        if assembly in SHARED_MOUNT_ASSEMBLIES
+        else [assembly]
+    )
+    for name in targets:
+        src_path = writable_xacro(name)
+        _patch_xacro_mount(src_path, xyz, rpy)
+        try:
+            share_path = share_xacro(name)
+            if share_path.resolve() != src_path.resolve():
+                _patch_xacro_mount(share_path, xyz, rpy)
+        except Exception:
+            pass
+        _write_extrinsics_mount(name, xyz, rpy)
     return text
 
 

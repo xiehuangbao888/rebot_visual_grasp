@@ -7,24 +7,27 @@ from launch_ros.substitutions import FindPackageShare
 
 
 def _setup(context, *args, **kwargs):
+    # Import here so launch works after `source install/setup.bash`.
+    from rebot_visual_grasp.paths import resolve_assembly, writable_xacro
+
     vis_share = FindPackageShare("rebot_visual_grasp")
     assembly = LaunchConfiguration("assembly").perform(context).strip().lower() or "gemini2"
-    xacro_name = {
-        "gemini2": "rebotarm_rs_with_gemini2.urdf.xacro",
-        "d405": "rebotarm_rs_with_d405.urdf.xacro",
-    }.get(assembly)
-    if xacro_name is None:
-        raise RuntimeError(f"unknown assembly={assembly!r}; use gemini2 or d405")
+    assembly = resolve_assembly(assembly)
+    # Prefer src xacro (same file align_mount writes), not a stale install copy.
+    xacro_path = str(writable_xacro(assembly))
 
-    xacro_file = PathJoinSubstitution([vis_share, "description", "urdf", xacro_name])
     rviz_config = PathJoinSubstitution([vis_share, "rviz", "align_camera.rviz"])
-    # Same as Gemini: camera only on the interactive marker (avoid double D405).
     robot_description = ParameterValue(
-        Command(["xacro ", xacro_file, " with_camera:=false"]),
+        Command(["xacro ", xacro_path, " with_camera:=false"]),
         value_type=str,
     )
     return [
-        LogInfo(msg=f"[align_camera] assembly={assembly} xacro={xacro_name} with_camera:=false"),
+        LogInfo(
+            msg=(
+                f"[align_camera] assembly={assembly} "
+                f"xacro={xacro_path} with_camera:=false"
+            )
+        ),
         Node(
             package="robot_state_publisher",
             executable="robot_state_publisher",
@@ -55,7 +58,7 @@ def generate_launch_description():
             DeclareLaunchArgument(
                 "assembly",
                 default_value="gemini2",
-                description="gemini2 (default, existing) or d405",
+                description="gemini2 (default), d405, or d435i",
             ),
             OpaqueFunction(function=_setup),
         ]

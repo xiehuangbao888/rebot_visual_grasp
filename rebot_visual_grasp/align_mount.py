@@ -20,9 +20,9 @@ from visualization_msgs.msg import (
 )
 
 from rebot_visual_grasp.paths import (
-    ASSEMBLIES,
     mount_mesh_uri,
     resolve_assembly,
+    share_xacro,
     writable_extrinsics,
     writable_xacro,
 )
@@ -119,47 +119,48 @@ def _patch_xacro_mount(xacro_path, xyz: str, rpy: str) -> None:
 
 
 def write_params(assembly: str, xyz, rpy):
-    """Write mount pose. Gemini2 and D405 share the same gripper flange mount_*."""
+    """Write mount pose for this assembly only (do not overwrite other cameras)."""
     text = (
         f'<xacro:property name="mount_xyz" value="{xyz}"/>\n'
         f'<xacro:property name="mount_rpy" value="{rpy}"/>\n'
     )
     POSE_PATH.write_text(text)
-    # Keep flange mount in sync across assemblies (D405 uses Gemini2 mount pose).
-    for name in ASSEMBLIES:
-        _patch_xacro_mount(writable_xacro(name), xyz, rpy)
-        _write_extrinsics_mount(name, xyz, rpy)
+    src_path = writable_xacro(assembly)
+    _patch_xacro_mount(src_path, xyz, rpy)
+    try:
+        share_path = share_xacro(assembly)
+        if share_path.resolve() != src_path.resolve():
+            _patch_xacro_mount(share_path, xyz, rpy)
+    except Exception:
+        pass
+    _write_extrinsics_mount(assembly, xyz, rpy)
     return text
 
 
 def load_current_mount_pose(assembly: str) -> Pose:
-    # Prefer Gemini2 as the shared flange source of truth.
-    for name in ("gemini2", assembly):
-        xacro_path = writable_xacro(name)
-        if not xacro_path.is_file():
-            continue
-        text = xacro_path.read_text()
-        xyz_m = re.search(r'<xacro:property name="mount_xyz" value="([^"]*)"/>', text)
-        rpy_m = re.search(r'<xacro:property name="mount_rpy" value="([^"]*)"/>', text)
-        if not xyz_m or not rpy_m:
-            continue
-        try:
-            x, y, z = [float(v) for v in xyz_m.group(1).split()]
-            roll, pitch, yaw = [float(v) for v in rpy_m.group(1).split()]
-        except ValueError:
-            continue
-        pose = Pose()
-        qx, qy, qz, qw = quaternion_from_euler(roll, pitch, yaw)
-        pose.position.x, pose.position.y, pose.position.z = x, y, z
-        pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w = (
-            qx,
-            qy,
-            qz,
-            qw,
-        )
-        return pose
+    xacro_path = writable_xacro(assembly)
     pose = Pose()
     pose.orientation.w = 1.0
+    if not xacro_path.is_file():
+        return pose
+    text = xacro_path.read_text()
+    xyz_m = re.search(r'<xacro:property name="mount_xyz" value="([^"]*)"/>', text)
+    rpy_m = re.search(r'<xacro:property name="mount_rpy" value="([^"]*)"/>', text)
+    if not xyz_m or not rpy_m:
+        return pose
+    try:
+        x, y, z = [float(v) for v in xyz_m.group(1).split()]
+        roll, pitch, yaw = [float(v) for v in rpy_m.group(1).split()]
+    except ValueError:
+        return pose
+    qx, qy, qz, qw = quaternion_from_euler(roll, pitch, yaw)
+    pose.position.x, pose.position.y, pose.position.z = x, y, z
+    pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w = (
+        qx,
+        qy,
+        qz,
+        qw,
+    )
     return pose
 
 

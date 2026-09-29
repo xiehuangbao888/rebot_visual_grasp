@@ -38,6 +38,7 @@ def _setup(context, *args, **kwargs):
             package="rebot_visual_grasp",
             executable="align_camera",
             output="screen",
+            emulate_tty=True,
             parameters=[{"assembly": assembly}],
         ),
         Node(

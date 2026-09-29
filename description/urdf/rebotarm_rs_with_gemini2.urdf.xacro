@@ -11,12 +11,12 @@
 # so RViz shows the camera; Orbbec driver still provides image topics + optical TF.
 # If you only use wrist_camera.launch.py (static TF), keep values in sync with
 # config/wrist_extrinsics.yaml.
-  <xacro:property name="mount_xyz" value="-0.0857 0.0000 0.0002"/>
-  <xacro:property name="mount_rpy" value="1.5609 -0.0043 1.5333"/>
+  <xacro:property name="mount_xyz" value="-0.1201 0.0003 0.0507"/>
+  <xacro:property name="mount_rpy" value="1.5827 0.0024 1.5515"/>
   <xacro:property name="mount_mesh_scale" value="0.001 0.001 0.001"/>
   <!-- Inverse of camera_botter_screw_joint: camera bottom screw at mount origin. -->
-  <xacro:property name="camera_xyz" value="0.0250 0.0542 0.0112"/>
-  <xacro:property name="camera_rpy" value="-0.0157 -1.3078 -1.5644"/>
+  <xacro:property name="camera_xyz" value="0.0249 0.0487 0.0090"/>
+  <xacro:property name="camera_rpy" value="0.0042 -1.0502 -1.5718"/>
 
   <link name="camera_mount_link">
     <visual>

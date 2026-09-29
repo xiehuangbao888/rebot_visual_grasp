@@ -15,14 +15,15 @@
       - Mount face holes ~20 mm apart (STEP).
       - D405 bottom: 1/4-20 at bottom_screw origin, two M3 at x=±10 mm (along hole line).
       - camera_xyz = hole midpoint; +X along hole pair, +Z along hole axis (into camera).
-      - mount_* = Gemini2 flange seed (same gripper interface).
+      - mount_* shared with Gemini2 (same gripper flange); align_mount syncs both.
+      - camera_* = D405-only (do not copy Gemini2 camera_*).
   -->
-  <xacro:property name="mount_xyz" value="-0.0857 0.0000 0.0002"/>
-  <xacro:property name="mount_rpy" value="1.5609 -0.0043 1.5333"/>
+  <xacro:property name="mount_xyz" value="-0.1201 0.0003 0.0507"/>
+  <xacro:property name="mount_rpy" value="1.5827 0.0024 1.5515"/>
   <xacro:property name="mount_mesh_scale" value="0.001 0.001 0.001"/>
-  <!-- Keep user-tuned orientation; snap position to mount hole midpoint (seated in red pocket). -->
-  <xacro:property name="camera_xyz" value="-0.0003 0.0463 -0.0081"/>
-  <xacro:property name="camera_rpy" value="-0.0444 -1.3136 -1.5225"/>
+  <!-- D405 seated in mount pocket (camera relative to camera_mount_link). -->
+  <xacro:property name="camera_xyz" value="-0.0003 0.0443 -0.0093"/>
+  <xacro:property name="camera_rpy" value="-0.0225 -1.0448 -1.5460"/>
 
   <link name="camera_mount_link">
     <visual>

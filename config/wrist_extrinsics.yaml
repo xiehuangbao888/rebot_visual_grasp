@@ -6,11 +6,11 @@
 mount:
   parent_frame: gripper_end
   child_frame: camera_mount_link
-  xyz: [-0.0857, 0.0000, 0.0002]
-  rpy: [1.5609, -0.0043, 1.5333]
+  xyz: [-0.1201, 0.0003, 0.0507]
+  rpy: [1.5827, 0.0024, 1.5515]
 
 camera:
   parent_frame: camera_mount_link
   child_frame: camera_link
-  xyz: [0.0250, 0.0542, 0.0112]
-  rpy: [-0.0157, -1.3078, -1.5644]
+  xyz: [0.0249, 0.0487, 0.0090]
+  rpy: [0.0042, -1.0502, -1.5718]

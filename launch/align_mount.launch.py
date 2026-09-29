@@ -36,6 +36,7 @@ def generate_launch_description():
                 package="rebot_visual_grasp",
                 executable="align_mount",
                 output="screen",
+                emulate_tty=True,
                 parameters=[{"assembly": assembly}],
             ),
             Node(

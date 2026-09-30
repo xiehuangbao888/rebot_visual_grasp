@@ -14,11 +14,11 @@
     D405 uses its own mount CAD (not Gemini2's D435_Gemini2_Mount).
     mount_* / camera_* are D405-only — do not sync from Gemini2.
   -->
-  <xacro:property name="mount_xyz" value="-0.0857 0.0000 0.0002"/>
-  <xacro:property name="mount_rpy" value="1.5609 -0.0043 1.5333"/>
+  <xacro:property name="mount_xyz" value="-0.1201 0.0003 0.0507"/>
+  <xacro:property name="mount_rpy" value="1.5827 0.0024 1.5515"/>
   <xacro:property name="mount_mesh_scale" value="0.001 0.001 0.001"/>
-  <xacro:property name="camera_xyz" value="-0.0003 0.0463 -0.0081"/>
-  <xacro:property name="camera_rpy" value="-0.0444 -1.3136 -1.5225"/>
+  <xacro:property name="camera_xyz" value="-0.0003 0.0443 -0.0093"/>
+  <xacro:property name="camera_rpy" value="-0.0225 -1.0448 -1.5460"/>
 
   <link name="camera_mount_link">
     <visual>

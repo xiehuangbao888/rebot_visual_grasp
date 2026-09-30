@@ -28,15 +28,11 @@ def _setup(context, *args, **kwargs):
     robot_description = ParameterValue(
         Command(
             [
-                "bash",
-                "-c",
-                [
-                    "xacro ",
-                    xacro_path,
-                    " with_camera:=false | python3 ",
-                    rviz_urdf_compat,
-                    " -",
-                ],
+                "python3 ",
+                rviz_urdf_compat,
+                " --xacro ",
+                xacro_path,
+                " with_camera:=false",
             ]
         ),
         value_type=str,

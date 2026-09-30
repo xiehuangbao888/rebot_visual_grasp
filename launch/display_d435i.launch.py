@@ -23,19 +23,7 @@ def generate_launch_description():
         [vis_share, "rviz", "display_arm_camera.rviz"]
     )
     robot_description = ParameterValue(
-        Command(
-            [
-                "bash",
-                "-c",
-                [
-                    "xacro ",
-                    xacro_file,
-                    " | python3 ",
-                    rviz_urdf_compat,
-                    " -",
-                ],
-            ]
-        ),
+        Command(["python3 ", rviz_urdf_compat, " --xacro ", xacro_file]),
         value_type=str,
     )
 

@@ -10,10 +10,16 @@ def generate_launch_description():
     bringup_share = FindPackageShare("rebotarm_bringup")
     vis_share = FindPackageShare("rebot_visual_grasp")
     urdf_file = PathJoinSubstitution(
-        [bringup_share, "description", "urdf", "00-arm-rs_asm-v3.urdf"]
+        [bringup_share, "description", "RS", "urdf", "ReBot_Arm_RS.urdf"]
+    )
+    rviz_urdf_compat = PathJoinSubstitution(
+        [bringup_share, "launch", "rviz_urdf_compat.py"]
     )
     rviz_config = PathJoinSubstitution([vis_share, "rviz", "align_mount.rviz"])
-    robot_description = ParameterValue(Command(["cat ", urdf_file]), value_type=str)
+    robot_description = ParameterValue(
+        Command(["python3 ", rviz_urdf_compat, " ", urdf_file]),
+        value_type=str,
+    )
     assembly = LaunchConfiguration("assembly")
 
     return LaunchDescription(

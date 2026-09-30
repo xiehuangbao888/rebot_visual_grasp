@@ -6,6 +6,7 @@ from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
+    bringup_share = FindPackageShare("rebotarm_bringup")
     vis_share = FindPackageShare("rebot_visual_grasp")
     xacro_file = PathJoinSubstitution(
         [
@@ -15,7 +16,25 @@ def generate_launch_description():
             "rebotarm_rs_with_gemini2.urdf.xacro",
         ]
     )
-    robot_description = ParameterValue(Command(["xacro ", xacro_file]), value_type=str)
+    rviz_urdf_compat = PathJoinSubstitution(
+        [bringup_share, "launch", "rviz_urdf_compat.py"]
+    )
+    robot_description = ParameterValue(
+        Command(
+            [
+                "bash",
+                "-c",
+                [
+                    "xacro ",
+                    xacro_file,
+                    " | python3 ",
+                    rviz_urdf_compat,
+                    " -",
+                ],
+            ]
+        ),
+        value_type=str,
+    )
     rviz_config = PathJoinSubstitution(
         [vis_share, "rviz", "display_arm_camera.rviz"]
     )

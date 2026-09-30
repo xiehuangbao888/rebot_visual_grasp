@@ -31,6 +31,9 @@ def generate_launch_description():
             "rebotarm_rs_with_gemini2.urdf.xacro",
         ]
     )
+    rviz_urdf_compat = PathJoinSubstitution(
+        [bringup_share, "launch", "rviz_urdf_compat.py"]
+    )
 
     hardware_config = LaunchConfiguration("hardware_config")
     model = LaunchConfiguration("model")
@@ -44,7 +47,19 @@ def generate_launch_description():
     disable_after_safe_home = LaunchConfiguration("disable_after_safe_home")
 
     robot_description = ParameterValue(
-        Command(["xacro ", xacro_file]),
+        Command(
+            [
+                "bash",
+                "-c",
+                [
+                    "xacro ",
+                    xacro_file,
+                    " | python3 ",
+                    rviz_urdf_compat,
+                    " -",
+                ],
+            ]
+        ),
         value_type=str,
     )
     rviz_config = PathJoinSubstitution(

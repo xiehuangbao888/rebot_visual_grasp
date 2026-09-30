@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, LogInfo, OpaqueFunction
 from launch.substitutions import Command, LaunchConfiguration, PathJoinSubstitution
@@ -8,6 +10,7 @@ from launch_ros.substitutions import FindPackageShare
 
 def _setup(context, *args, **kwargs):
     # Import here so launch works after `source install/setup.bash`.
+    from ament_index_python.packages import get_package_share_directory
     from rebot_visual_grasp.paths import resolve_assembly, writable_xacro
 
     vis_share = FindPackageShare("rebot_visual_grasp")
@@ -15,10 +18,27 @@ def _setup(context, *args, **kwargs):
     assembly = resolve_assembly(assembly)
     # Prefer src xacro (same file align_mount writes), not a stale install copy.
     xacro_path = str(writable_xacro(assembly))
+    rviz_urdf_compat = str(
+        Path(get_package_share_directory("rebotarm_bringup"))
+        / "launch"
+        / "rviz_urdf_compat.py"
+    )
 
     rviz_config = PathJoinSubstitution([vis_share, "rviz", "align_camera.rviz"])
     robot_description = ParameterValue(
-        Command(["xacro ", xacro_path, " with_camera:=false"]),
+        Command(
+            [
+                "bash",
+                "-c",
+                [
+                    "xacro ",
+                    xacro_path,
+                    " with_camera:=false | python3 ",
+                    rviz_urdf_compat,
+                    " -",
+                ],
+            ]
+        ),
         value_type=str,
     )
     return [
